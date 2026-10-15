@@ -3,17 +3,24 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/twai.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 
 #define TAG             "node_b"
 
 #define CAN_TX_GPIO     5
 #define CAN_RX_GPIO     4
+#define LED_GPIO        2       /* onboard LED on most ESP32 dev boards */
 
 #define SENSOR_MSG_ID   0x123
+#define THRESHOLD       50
 
 void app_main(void)
 {
+    gpio_reset_pin(LED_GPIO);
+    gpio_set_direction(LED_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(LED_GPIO, 0);
+
     twai_general_config_t g_config =
         TWAI_GENERAL_CONFIG_DEFAULT(CAN_TX_GPIO, CAN_RX_GPIO, TWAI_MODE_NORMAL);
     twai_timing_config_t t_config = TWAI_TIMING_CONFIG_500KBITS();
@@ -50,5 +57,13 @@ void app_main(void)
         uint8_t sensor_value = message.data[0];
         ESP_LOGI(TAG, "Received ID=0x%03X DLC=%d sensor=%d",
                  message.identifier, message.data_length_code, sensor_value);
+
+        if (sensor_value > THRESHOLD) {
+            gpio_set_level(LED_GPIO, 1);
+            ESP_LOGI(TAG, "sensor %d > %d -> actuator ON", sensor_value, THRESHOLD);
+        } else {
+            gpio_set_level(LED_GPIO, 0);
+            ESP_LOGI(TAG, "sensor %d <= %d -> actuator OFF", sensor_value, THRESHOLD);
+        }
     }
 }
