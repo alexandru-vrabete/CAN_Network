@@ -1,0 +1,18 @@
+# ESP-IDF build output
+build/
+sdkconfig
+sdkconfig.old
+sdkconfig.*.old
+managed_components/
+dependencies.lock
+
+# Python
+__pycache__/
+*.pyc
+
+# Sniffer output
+can_traffic.csv
+
+# Editors / OS
+.vscode/
+.DS_Store
